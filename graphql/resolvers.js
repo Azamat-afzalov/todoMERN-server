@@ -7,7 +7,7 @@ module.exports = {
                     ...todo._doc,
                     updatedAt : todo.updatedAt.toISOString(),
                     createdAt : todo.createdAt.toISOString(),
-                    _id : todo._id.toString()
+                    _id : todo._id
             }))
         };
     },
@@ -38,13 +38,12 @@ module.exports = {
 // ! GET ALL TODOS
 // {
 //     getTodos {
-//       todos{
+//         todos{
 //         _id
 //         title
-
-//       }
 //     }
-//   }
+//     }
+// }
 
 // !GET ONE TODO
 // {

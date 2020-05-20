@@ -15,7 +15,6 @@ module.exports = buildSchema(`
     input todoInput {
         title : String!
     }
-
     type RootQuery {
         getTodos : Todos
         getTodo(id:ID!):Todo!
