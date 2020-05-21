@@ -91,10 +91,10 @@ module.exports = {
                 error.code = 404;
                 throw error;
             }
-            await todo.deleteOne({_id : args.id});
+            // await Todo.deleteOne({_id : args.id});
+            todo.remove();
             return {
-                success : true,
-                _id : args.id
+                _id : args.id.toString()
             }
         } catch (error) {
             return error;

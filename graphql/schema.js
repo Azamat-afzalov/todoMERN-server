@@ -24,7 +24,6 @@ module.exports = buildSchema(`
     }
     type deleteTodo{
         _id: ID!
-        success : Boolean!
     }
     input todoInput {
         title : String!
