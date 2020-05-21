@@ -12,15 +12,31 @@ module.exports = buildSchema(`
     type Todos {
         todos : [Todo!]
     }
+    type CreatedTodo {
+        todo : Todo
+        success : Boolean!
+    }
+    type toggleTodo {
+        _id :ID!
+        success : Boolean!
+        message : String
+    }
+    type deleteTodo{
+        _id: ID!
+        success : Boolean!
+    }
     input todoInput {
         title : String!
     }
+
     type RootQuery {
         getTodos : Todos
         getTodo(id:ID!):Todo!
     }
     type RootMutation {
-        createTodo(input : todoInput):Todo!
+        createTodo(input : todoInput):CreatedTodo!
+        toggleComplete(id:ID!):toggleTodo!
+        deleteTodo(id:ID!):deleteTodo!
     }
     schema {
         mutation : RootMutation
@@ -41,5 +57,14 @@ module.exports = buildSchema(`
 //       _id
 //       title
 //       isCompleted
+//     }
+//   }
+
+// ! Toggle Complete
+// mutation {
+//     toggleComplete(id:"5ec526401b28c33304a1518f") {
+//       _id
+//       success
+//       message
 //     }
 //   }
