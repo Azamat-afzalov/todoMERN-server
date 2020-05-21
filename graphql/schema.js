@@ -10,11 +10,12 @@ module.exports = buildSchema(`
         updatedAt : String!
     }
     type Todos {
-        todos : [Todo!]
+        success : Boolean!
+        todos : [Todo]
+        error : String
     }
     type CreatedTodo {
-        todo : Todo
-        success : Boolean!
+        todo : Todo!
     }
     type toggleTodo {
         _id :ID!

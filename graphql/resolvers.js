@@ -1,24 +1,23 @@
 const Todo = require('../models/Todo');
 module.exports = {
     getTodos: async() => {
-        console.log("GET TODOS");
         try {
-            const todos = await Todo.find();
+            const todos = await Todo.find().sort({createdAt : -1});
             if(!todos){
                 const error = new Error('Cannot find todos');
                 error.code = 404;
-                return error
+                throw error;
             }
-            return { todos : todos.map(todo => ({
-                        ...todo._doc,
-                        updatedAt : todo.updatedAt.toISOString(),
-                        createdAt : todo.createdAt.toISOString(),
-                        _id : todo._id
+            return {
+                todos : todos.map(todo => ({
+                    ...todo._doc,
+                    updatedAt : todo.updatedAt.toISOString(),
+                    createdAt : todo.createdAt.toISOString(),
+                    _id : todo._id
                 }))
             };
         } catch (error) {
-            console.log(error);
-            throw error;
+            return error;
         }
 
     },
@@ -28,7 +27,7 @@ module.exports = {
             if(!todo){
                 const error = new Error('Todo not found');
                 error.code = 404;
-                return error;
+                throw error;
             }
             return {
                 ...todo._doc,
@@ -37,12 +36,16 @@ module.exports = {
                 _id : todo._id.toString()
             };
         } catch (error) {
-            console.log(error);
-            throw error;
+            return error;
         }
     },
     createTodo : async(args ,req) => {
-        console.log('CREATE_TODO' , args.input.title);
+
+        if(!args.input.title){
+            const error = new Error('Title must be provided')
+            error.code = 404;
+            throw error;
+        }
         const todo = new Todo({
             title : args.input.title,
             isCompleted : false
@@ -55,22 +58,19 @@ module.exports = {
                     updatedAt : createdTodo.updatedAt.toISOString(),
                     createdAt : createdTodo.createdAt.toISOString(),
                     _id : createdTodo._id.toString()
-                },
-                success : true
+                }
             }
         } catch (error) {
-            console.log(error);
-            throw error;
+            return error;
         }
     },
     toggleComplete : async(args , req) => {
         try {
             const todo = await Todo.findById(args.id);
             if(!todo) {
-                return {
-                    success : false,
-                    message : 'can not find todo'
-                }
+                const error = new Error('Can not find todo');
+                error.code = 404;
+                throw error;
             }
             todo.isCompleted = !todo.isCompleted;
             await todo.save();
@@ -80,11 +80,7 @@ module.exports = {
                 _id : todo._id.toString()
             }
         } catch (error) {
-            console.log(error);
-            return {
-                success : false,
-                message : 'updating todo failed'
-            }
+            return error;
         }
     },
     deleteTodo : async(args , req) => {
@@ -93,7 +89,7 @@ module.exports = {
             if(!todo){
                 const error = new Error('Todo not found to delete');
                 error.code = 404;
-                return error;
+                throw error;
             }
             await todo.deleteOne({_id : args.id});
             return {
@@ -101,8 +97,7 @@ module.exports = {
                 _id : args.id
             }
         } catch (error) {
-            console.log(error);
-            throw error;
+            return error;
         }
     }
 }
