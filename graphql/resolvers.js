@@ -66,6 +66,7 @@ module.exports = {
     },
     toggleComplete : async(args , req) => {
         try {
+            console.log(args.id);
             const todo = await Todo.findById(args.id);
             if(!todo) {
                 const error = new Error('Can not find todo');
@@ -75,8 +76,6 @@ module.exports = {
             todo.isCompleted = !todo.isCompleted;
             await todo.save();
             return {
-                success : true,
-                message : 'updated successfully',
                 _id : todo._id.toString()
             }
         } catch (error) {
