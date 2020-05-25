@@ -1,5 +1,0 @@
-{
-    "env" : {
-        "MONGO_URI" :"mongodb+srv://azamat_afzalov:299992628@mycluster-i4ou1.mongodb.net/mernTodo?retryWrites=true&w=majority"
-    }
-}

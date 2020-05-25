@@ -10,6 +10,10 @@ const TodoSchema = new Schema({
         type : Boolean,
         required: true
     },
+    creator : {
+        type : Schema.Types.ObjectId,
+        ref : 'User'
+    }
 },{timestamps : true});
 
 module.exports = mongoose.model('Todo' ,TodoSchema);

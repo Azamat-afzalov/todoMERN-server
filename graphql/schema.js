@@ -25,18 +25,33 @@ module.exports = buildSchema(`
     type deleteTodo{
         _id: ID!
     }
+    type authData{
+        _id : ID!
+        token : String!
+    }
     input todoInput {
         title : String!
+    }
+    input signupInput {
+        username : String!
+        email : String!
+        password : String!
+    }
+    input loginInput {
+        email : String!
+        password : String!
     }
 
     type RootQuery {
         getTodos : Todos
         getTodo(id:ID!):Todo!
     }
+
     type RootMutation {
         createTodo(input : todoInput):CreatedTodo!
         toggleComplete(id:ID!):toggleTodo!
         deleteTodo(id:ID!):deleteTodo!
+        createUser(input : signupInput):authData!
     }
     schema {
         mutation : RootMutation

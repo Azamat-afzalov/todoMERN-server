@@ -1,4 +1,9 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const validator = require('validator');
 const Todo = require('../models/Todo');
+const User = require('../models/User');
+require('dotenv').config()
 module.exports = {
     getTodos: async() => {
         try {
@@ -98,6 +103,63 @@ module.exports = {
         } catch (error) {
             return error;
         }
+    },
+    createUser: async({input} ,req) => {
+        const { username , password , email } = input;
+        const errors = [];
+        if(!validator.isLength(username ,{ min:2 })){
+            errors.push({field : "username",message : "username must be at least 2 characters"});
+        }
+        if(!validator.isEmail(email)){
+            errors.push({field : "email",message : "email is invalid"});
+        }
+        if(!validator.isLength(password ,{ min:6 })){
+            errors.push({field : "password",message : "password must contain at least 6 characters"});
+        }
+        if(errors.length > 0){
+            const error = new Error('Invalid input values');
+            error.data = errors;
+            error.code = 422;
+            throw error;
+        }
+        const isExistingUser = await User.findOne({email : email});
+
+        if(isExistingUser){
+            const error = new Error('User with this email already exists');
+            throw error;
+        }
+        let hashedPassword;
+        try {
+            hashedPassword = await bcrypt.hash(password,12);
+
+        } catch (error) {
+            console.log("failed to hash password");
+        }
+        let createdUser;
+        try {
+            const user = new User({
+                email : email,
+                password : hashedPassword,
+                username : username
+            });
+            console.log(user);
+            createdUser = await user.save();
+        } catch (error) {
+            console.log("failed to save user");
+            console.log(error)
+        }
+        console.log(createdUser);
+        const token = jwt.sign({
+                userId : createdUser._id.toString()
+            },
+            process.env.JWT_SIGN ,
+            {
+                expiresIn : '2h'
+            });
+        return {
+            _id : createdUser._id.toString(),
+            token : token
+        }
     }
 }
 
@@ -128,3 +190,15 @@ module.exports = {
 //       updatedAt
 //     }
 //   }
+
+// !createUser
+// mutation {
+//     createUser( input : {
+//         username : "azamat3",
+//         email :"test1@test.com",
+//         password :"1234"
+//     }) {
+//         _id
+//         token
+//     }
+// }

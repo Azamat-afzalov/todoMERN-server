@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const graphqlHTTP = require('express-graphql');
 const cors = require('cors');
+require('dotenv').config()
 
 const graphqlSchema = require('./graphql/schema');
 const graphqlResolvers = require('./graphql/resolvers');
@@ -9,7 +10,6 @@ const graphqlResolvers = require('./graphql/resolvers');
 
 const app = express();
 app.use(express.json());
-// console.log(graphqlSchema , graphqlResolvers);
 app.use(cors());
 app.use('/graphql' , graphqlHTTP({
     schema: graphqlSchema,
