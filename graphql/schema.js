@@ -37,6 +37,7 @@ module.exports = buildSchema(`
         email : String!
         password : String!
     }
+
     input loginInput {
         email : String!
         password : String!
@@ -48,10 +49,11 @@ module.exports = buildSchema(`
     }
 
     type RootMutation {
-        createTodo(input : todoInput):CreatedTodo!
+        createTodo(input : todoInput!):CreatedTodo!
         toggleComplete(id:ID!):toggleTodo!
         deleteTodo(id:ID!):deleteTodo!
-        createUser(input : signupInput):authData!
+        createUser(input : signupInput!):authData!
+        loginUser(input : loginInput!):authData!
     }
     schema {
         mutation : RootMutation

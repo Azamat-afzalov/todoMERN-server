@@ -15,8 +15,6 @@ const userSchema = new Schema({
         required : true
     },
     todos : [{type : Schema.Types.ObjectId , ref:'Todo'}]
-
-
 },{ timestamps: { createdAt: 'created_at' }});
 
 module.exports = mongoose.model('User' , userSchema);
