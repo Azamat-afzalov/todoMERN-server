@@ -5,16 +5,37 @@ const Todo = require("../models/Todo");
 const User = require("../models/User");
 require("dotenv").config();
 module.exports = {
-    getTodos: async () => {
+    getTodos: async (args, req) => {
         try {
-        const todos = await Todo.find().sort({ createdAt: -1 });
-        if (!todos) {
-            const error = new Error("Cannot find todos");
-            error.code = 404;
-            throw error;
-        }
+            // const todos = await Todo.find({creator : req.userId}).sort({ createdAt: -1 });
+            if(!req.userId){
+                const error = new Error("Not Authenticated");
+                error.code = 401;
+                throw error;
+            }
+            const user = await User.findOne({_id : req.userId},'').populate({
+                path : "todos",
+                model : "Todo",
+                options : {
+                    sort : 'todos.createdAt'
+                }
+            })
+            const sorted = user.todos.sort((a, b) => {
+                if(a.createdAt > b.createdAt){
+                    return -1;
+                }else if(a.createdAt < b.createdAt){
+                    return 1;
+                }else{
+                    return 0;
+            }
+            });
+            if (!sorted) {
+                const error = new Error("Can not find todos");
+                error.code = 404;
+                throw error;
+            }
         return {
-            todos: todos.map((todo) => ({
+            todos: sorted.map((todo) => ({
             ...todo._doc,
             updatedAt: todo.updatedAt.toISOString(),
             createdAt: todo.createdAt.toISOString(),
@@ -22,7 +43,7 @@ module.exports = {
             })),
         };
         } catch (error) {
-        return error;
+            return error;
         }
     },
     getTodo: async ({ id }, req) => {
@@ -44,27 +65,32 @@ module.exports = {
         }
     },
     createTodo: async (args, req) => {
+        console.log('Create TODO' , req.userId);
         if (!args.input.title) {
-        const error = new Error("Title must be provided");
-        error.code = 404;
-        throw error;
+            const error = new Error("Title must be provided");
+            error.code = 404;
+            throw error;
         }
+        const user = await User.findById(req.userId);
         const todo = new Todo({
-        title: args.input.title,
-        isCompleted: false,
+            title: args.input.title,
+            isCompleted: false,
+            creator : req.userId
         });
         try {
-        const createdTodo = await todo.save();
+            const createdTodo = await todo.save();
+            user.todos.push(createdTodo);
+            await user.save()
         return {
             todo: {
-            ...createdTodo._doc,
-            updatedAt: createdTodo.updatedAt.toISOString(),
-            createdAt: createdTodo.createdAt.toISOString(),
-            _id: createdTodo._id.toString(),
+                ...createdTodo._doc,
+                updatedAt: createdTodo.updatedAt.toISOString(),
+                createdAt: createdTodo.createdAt.toISOString(),
+                _id: createdTodo._id.toString()
             },
         };
         } catch (error) {
-        return error;
+            return error;
         }
     },
     toggleComplete: async (args, req) => {
@@ -87,19 +113,21 @@ module.exports = {
     },
     deleteTodo: async (args, req) => {
         try {
-        const todo = await Todo.findById(args.id);
-        if (!todo) {
-            const error = new Error("Todo not found to delete");
-            error.code = 404;
-            throw error;
-        }
-        // await Todo.deleteOne({_id : args.id});
-        todo.remove();
-        return {
-            _id: args.id.toString(),
-        };
+            const todo = await Todo.findById(args.id);
+            if (!todo) {
+                const error = new Error("Todo not found to delete");
+                error.code = 404;
+                throw error;
+            }
+            await todo.remove();
+            const user = await User.findById(req.userId);
+            user.todos.pull(args.id);
+            await user.save();
+            return {
+                _id: args.id.toString()
+            };
         } catch (error) {
-        return error;
+            return error;
         }
     },
     createUser: async ({ input }, req) => {
@@ -153,8 +181,7 @@ module.exports = {
         }
         const token = jwt.sign(
         {
-            userId: createdUser._id.toString(),
-            email: createdUser.email,
+            userId: createdUser._id.toString()
         },
         process.env.JWT_SIGN,
         {
@@ -169,19 +196,18 @@ module.exports = {
     loginUser: async ({ input }, req) => {
         const { email, password } = input;
         const user = await User.findOne({ email: email });
+        const error = new Error("Incorrect email or password");
+        error.code = 401;
+
         if (!user) {
-            const error = new Error("User with this email does not exists");
-            error.code = 401;
             throw error;
         }
         const isEqual = await bcrypt.compare(password, user.password);
         if (!isEqual) {
-            const error = new Error("Password is incorrect");
-            error.code = 401;
             throw error;
         }
         const token = jwt.sign(
-            { userId: user._id.toString(), email: user.email },
+            { userId: user._id.toString() },
             process.env.JWT_SIGN,
             {
                 expiresIn: "2h",

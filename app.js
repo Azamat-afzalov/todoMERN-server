@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const graphqlHTTP = require('express-graphql');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const auth = require('./middleware/auth');
 require('dotenv').config()
 
 const graphqlSchema = require('./graphql/schema');
@@ -11,6 +13,16 @@ const graphqlResolvers = require('./graphql/resolvers');
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+app.use((req, res, next) => {
+    if(req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
+    next();
+})
+
+app.use(auth)
+
 app.use('/graphql' , graphqlHTTP({
     schema: graphqlSchema,
     rootValue : graphqlResolvers,
